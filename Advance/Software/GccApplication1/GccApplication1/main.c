@@ -13,44 +13,14 @@
 #include <string.h>
 #include <stdio.h>
 
+#include "uart.h"
+
 
 #define RMSVoltage 14.5
 #define PeakCurrent 125
 #define Power 1.60
 
 
-void usart_init(uint16_t ubrr){
-	UCSR0A &= ~(1<<UDRE0);    // Clearing the UDRE0, so that we can start transmitting data.
-	UCSR0B |= (1<<TXEN0);		// Enabling TXEN0, to allow transmission
-	
-	UBRR0H = (uint8_t) (ubrr>>8); // Don't really know how this 100% works, got it from data sheet.
-	UBRR0L = (uint8_t) (ubrr);
-	
-}
-
-void uart_transmit_char(uint8_t data){
-	while (!(UCSR0A & (1<<UDRE0))){		// Making sure theres no data in transmit register, before storing new information in for transmission.
-		;
-	}
-	
-	UDR0 = data;		// Putting data in.
-}
-
-void uart_transmit_msg(char* msg){
-	
-	// This function takes in a char array, and transmit it character by character.
-	
-	for (uint8_t i = 0; i < strlen(msg); i++){
-		uart_transmit_char(msg[i]);
-	}
-}
-
-// int uart_printf(char var, FILE *stream) {
-// 	uart_transmit_char(var); //Using our original function to transmit UART data
-// 	return 0;
-// }
-// 
-// 	static FILE usart_stdout = FDEV_SETUP_STREAM(uart_printf, NULL, _FDEV_SETUP_WRITE);
 
 int main(void)
 {
@@ -69,16 +39,10 @@ int main(void)
 	uint16_t new_current = PeakCurrent;
 	uint16_t new_power = Power * 100;
 	
-	//Binding the stream variable to stdout
-	//stdout = &usart_stdout;
-	
 	
 
     while (1) 
     {
-		
-		//uart_printf('0', stdout);
-		
 		
 		uart_transmit_msg(voltage);
 		uart_transmit_char(new_voltage /100 % 10  + 48);
@@ -107,6 +71,7 @@ int main(void)
 		
 
 		_delay_ms(1000);  // Delay for 1 second.
-    }
+    
+	}
 }
 
