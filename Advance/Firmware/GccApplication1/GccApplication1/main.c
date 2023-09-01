@@ -67,7 +67,6 @@ int main(void)
 		
 		uart_transmit_char('\n\r');
 		uart_transmit_char('\n\r');
-		uart_transmit_char('\n\r');
 		
 
 		_delay_ms(1000);  // Delay for 1 second.
