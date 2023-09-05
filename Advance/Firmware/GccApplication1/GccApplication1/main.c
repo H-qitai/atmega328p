@@ -5,7 +5,7 @@
  * Author : qhua835
  */ 
 
-#define F_CPU 16000000UL
+#define F_CPU 2000000UL
 
 #include <avr/io.h>
 #include <stdint.h>
@@ -25,7 +25,7 @@
 int main(void)
 {
 	
-	usart_init(103);  //initializing baud rate
+	usart_init(12);  //initializing baud rate for 2MHz
     
 	// Storing the message that needs to be printed.
 	
@@ -58,14 +58,13 @@ int main(void)
 		uart_transmit_char(new_current /1 % 10  + 48);
 		
 		uart_transmit_char('\n\r');
-				
+		
 		uart_transmit_msg(power);
 		uart_transmit_char(new_power /100 % 10  + 48);
 		uart_transmit_char('.');
 		uart_transmit_char(new_power /10 % 10  + 48);
 		uart_transmit_char(new_power /1 % 10  + 48);
 		
-		uart_transmit_char('\n\r');
 		uart_transmit_char('\n\r');
 		
 
