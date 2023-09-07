@@ -50,14 +50,16 @@ int main(void)
 		uart_transmit_char('.');
 		uart_transmit_char(new_voltage /1 % 10  + 48);							// Just transmitting.
 		
-		uart_transmit_char('\n\r');
+		uart_transmit_char('\r');
+		uart_transmit_char('\n');
 		
 		uart_transmit_msg(current);
 		uart_transmit_char(new_current /100 % 10  + 48);
 		uart_transmit_char(new_current /10 % 10  + 48);
 		uart_transmit_char(new_current /1 % 10  + 48);
 		
-		uart_transmit_char('\n\r');
+		uart_transmit_char('\r');
+		uart_transmit_char('\n');
 		
 		uart_transmit_msg(power);
 		uart_transmit_char(new_power /100 % 10  + 48);
@@ -65,7 +67,9 @@ int main(void)
 		uart_transmit_char(new_power /10 % 10  + 48);
 		uart_transmit_char(new_power /1 % 10  + 48);
 		
-		uart_transmit_char('\n\r');
+		uart_transmit_char('\r');
+		uart_transmit_char('\n');
+		uart_transmit_char('\n');
 		
 
 		_delay_ms(1000);  // Delay for 1 second.
