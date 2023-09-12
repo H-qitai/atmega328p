@@ -1,7 +1,7 @@
 Protel Design System Design Rule Check
-PCB File : C:\Users\vdum143\Downloads\ec209-project-2023_team-22-main\ec209-project-2023_team-22-main\Advance\PCB\EE209_Team22\EE209_PCB.PcbDoc
+PCB File : D:\Uni\Sem 2\COMPSYS209\ec209-project-2023_team-22\Advance\PCB\EE209_Team22\EE209_PCB.PcbDoc
 Date     : 12/09/2023
-Time     : 6:47:46 pm
+Time     : 23:46:29
 
 Processing Rule : Clearance Constraint (Gap=15.748mil) (All),(All)
 Rule Violations :0
@@ -46,9 +46,9 @@ Processing Rule : Net Antennae (Tolerance=0mil) (All)
 Rule Violations :0
 
 Processing Rule : Board Clearance Constraint (Gap=0mil) (All)
-   Violation between Board Outline Clearance(Outline Edge): (Collision < 19.685mil) Between Board Edge And Track (4835mil,3857.264mil)(4835mil,4445mil) on Bottom Overlay 
-   Violation between Board Outline Clearance(Outline Edge): (Collision < 19.685mil) Between Board Edge And Track (4835mil,4445mil)(5310mil,4445mil) on Bottom Overlay 
-   Violation between Board Outline Clearance(Outline Edge): (Collision < 19.685mil) Between Board Edge And Track (5310mil,3855mil)(5310mil,4445mil) on Bottom Overlay 
+   Violation between Board Outline Clearance(Outline Edge): (Collision < 19.685mil) Between Board Edge And Track (4850mil,3863.264mil)(4850mil,4451mil) on Bottom Overlay 
+   Violation between Board Outline Clearance(Outline Edge): (Collision < 19.685mil) Between Board Edge And Track (4850mil,4451mil)(5325mil,4451mil) on Bottom Overlay 
+   Violation between Board Outline Clearance(Outline Edge): (Collision < 19.685mil) Between Board Edge And Track (5325mil,3861mil)(5325mil,4451mil) on Bottom Overlay 
 Rule Violations :3
 
 Processing Rule : Height Constraint (Min=0mil) (Max=1900mil) (Prefered=0.2mil) (All)
