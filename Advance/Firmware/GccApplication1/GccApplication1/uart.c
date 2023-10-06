@@ -21,6 +21,7 @@ void usart_init(uint16_t ubrr){
 }
 
 void uart_transmit_char(uint8_t data){
+	// This function transmit a single character
 	while (!(UCSR0A & (1<<UDRE0))){		// Making sure theres no data in transmit register, before storing new information in for transmission.
 		;
 	}
@@ -29,10 +30,15 @@ void uart_transmit_char(uint8_t data){
 }
 
 void uart_transmit_msg(char* msg){
-	
 	// This function takes in a char array, and transmit it character by character.
 	
 	for (uint8_t i = 0; i < strlen(msg); i++){
 		uart_transmit_char(msg[i]);
 	}
+}
+
+int uart_printf(char var, FILE *stream) {
+	// This prints the whole message magically.
+	uart_transmit_char(var); //Using our original function to transmit UART data
+	return 0;
 }
