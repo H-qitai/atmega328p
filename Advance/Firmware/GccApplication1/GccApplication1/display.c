@@ -11,6 +11,7 @@
 #include <util/delay.h>
 #include "display.h"
 
+// Macro for easier reading
 #define SH_CP (1<<PC3)
 #define SH_DS (1<<PC4)
 #define SH_ST (1<<PC5)
@@ -36,7 +37,9 @@ static volatile uint8_t disp_characters[4]={0,0,0,0};
 static volatile uint8_t disp_position = 0;
 
 
-void init_display(){
+void display_init(){
+	// This function initialise the display
+	
 	// SH_CP/SH_DS/SH_ST set to output
 	DDRC |= (SH_CP) | (SH_DS) | (SH_ST);
 	// Ds1/Ds2/Ds3/Ds4 set to output
@@ -44,18 +47,8 @@ void init_display(){
 
 }
 
-//Populate the array ‘disp_characters[]’ by separating the four digits of ‘number’
-//and then looking up the segment pattern from ‘seg_pattern[]’
 void seperate_and_load_characters(uint16_t number, uint8_t decimal_pos){
-	//TODO: finish this function
-	//1. Separate each digit from ‘number’
-	// e.g. if value to display is 1230 the separated digits will be
-	// ‘1’, ‘2’, ‘3’ and ‘0’
-	//2. Lookup pattern required to display each digit from ‘seg_pattern[]’
-	// and store this pattern in appropriate position of ‘disp_characters[]’
-	// e.g. For digit ‘0’ in example above disp_characters[0] = seg_pattern[0]
-	//3. For the project you may modify this pattern to add decimal point at
-	// the position ‘decemal_pos’
+	// This function shifts the input number into their position in the position array.
 	
 	disp_characters[0] = seg_pattern[number/1000];
 	disp_characters[1] = seg_pattern[number/100%10];
@@ -64,37 +57,36 @@ void seperate_and_load_characters(uint16_t number, uint8_t decimal_pos){
 		
 }
 
-//Render a single digit from ‘disp_characters[]’ on the display at ‘disp_position’
 void send_next_character_to_display(void){
-	//TODO: finish this function
-	//1. Based on ‘disp_position’, load the digit to send to a local variable
-	//2. Send this bit pattern to the shift-register as in Q2.2
-	//3. Disable all digits
-	//4. Latch the output by toggling SH_ST pin as in Q2.2
-	//5. Now, depending on the value of pos, enable the correct digit
-	// (i.e. set Ds1, Ds2, Ds3 and Ds4 appropriately)
-	//6. Increment ‘disp_position’ so the next of the 4 digits will be displayed
-	// when function is called again from ISR (reset ‘disp_position’ after 3)
+	// This function send the character currently in disp_character to the display
+	
 		uint8_t currentdigit = disp_characters[disp_position];
 		
+		// Disable Serial in and output
 		PORTC &= ~(SH_CP) & ~(SH_ST);
 		
+		// Since it is 7 segment
+		// Check with the seg_pattern which bits need to be logic 1 or 0
 		for (int i = 7; i > -1; i--){
 			if (currentdigit & (1 << i)) {
 				PORTC |= (SH_DS); // Set SH_DS to 1
 				} else {
 				PORTC &= ~(SH_DS); // Set SH_DS to 0
 			}
+			// After it is set, toggling this will shift the bits into the latch
 			PORTC |= SH_CP;
 			PORTC &= ~(SH_CP);
 		}
 	
+	
+	// Ds1/Ds2/Ds3/Ds4 are cleared and wont display anything (active high)
 	PORTD |= (1<<PD4) | (1<<PD5) | (1<<PD6) | (1<<PD7);
 	
+		// Toggling this will latch the output
 		PORTC |= SH_ST;
 		PORTC &= ~(SH_ST);
 	
-	    // 5. Enable the correct digit
+	    // Enable the correct digit to be displayed on Ds1..4
 	    switch (disp_position){
 			case 0:
 				PORTD &= ~(1<<PD4);
@@ -110,7 +102,7 @@ void send_next_character_to_display(void){
 				break;
 		}
 	    
-	    // 6. Increment ‘disp_position’ and reset after 3
+	    // Increment disp_position and reset after 3
 	    disp_position++;
 	    if (disp_position > 3) {
 		    disp_position = 0; // Reset after displaying all 4 digits

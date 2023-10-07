@@ -9,7 +9,9 @@
 #ifndef DISPLAY_H_
 #define DISPLAY_H_
 
-void init_display();
+// linkers
+
+void display_init();
 
 const uint8_t number[10];
 
