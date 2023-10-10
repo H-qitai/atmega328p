@@ -51,13 +51,3 @@ uint16_t adc_to_squaredadc(uint32_t adcvalues[40]){
 	
 	return sqrt(adc_rms32/40);
 }
-
-
-uint16_t adc_convert_ma(uint16_t current){
-	// This function converts adc reading to mA.
-	// Same as above idk why i didnt implement this in one function. :p
-	
-	uint32_t current_ma = 0;
-	current_ma = (uint32_t)current * 5000/1024;
-	return current_ma;
-}

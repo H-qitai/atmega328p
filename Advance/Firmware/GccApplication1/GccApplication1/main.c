@@ -22,7 +22,7 @@
 #include "display.h"
 #include "adc.h"
 
-// The lines below shalled be removed later
+// The lines below shall be removed later
 // Defining the references voltages and current/ power, these information will be collected from adc later on.
 #define Power 1.6
 // Making new variables so they can be converted to the format that is needed to display easier. (temporary)
@@ -46,7 +46,7 @@ int main(void)
 	uint32_t voltage_ac[40] = {0};
 	uint32_t current_ac[40] = {0};
 	
-	// This can be used later to calculate the Vrms/Ipk
+	// This can be used later to store the Vrms/Ipk
 	uint16_t voltage_rms = 0;
 	uint16_t current_pk = 0;
 	
@@ -77,27 +77,29 @@ int main(void)
 		}
 		
 		
+		// The values are den calculated and offset is removed
+		// Taking the absolute value make sure there will be no negatives when the offset is removed
+		// As the microcontroller can't deal with negatives
 		for (uint8_t i = 0; i < 40; i++){;
 			voltage_ac[i] = abs((((uint32_t)voltage_adc[i]*500/1024)-205) * 22);
-			current_ac[i] = abs((((uint32_t)current_adc[i]*500/1024)-205) * 2);
+			current_ac[i] = abs((((uint32_t)current_adc[i]*5000/1024)-2053) * 2);
 		}
-
+		
 		
 		// Converts the adc values to square and sum
-		// Than the value is converted to milli scale for easier display
-		voltage_rms = adc_to_squaredadc(voltage_ac);
+		// AKA applying Riemann Sum
+		voltage_rms = adc_to_squaredadc(voltage_ac);//  * 14/10; If Vpk is needed this is den added.
 		current_pk = adc_to_squaredadc(current_ac);
+		// The Current is den converted to Peak
+		current_pk = current_pk * 14 / 10;
 		
 		
 		// The values calculated above is now displayed		
-		printf("RMS Voltage is: %d%d.%d%d\r\n", (voltage_rms /1000 % 10), (voltage_rms /100 % 10), (voltage_rms /10 % 10), (voltage_rms % 10));
-		printf("Peak Current is:  %1f\r\n", sqrt(2));                  // Just transmitting.
-
+		printf("RMS Voltage is: %d%d.%d%dV\r\n", (voltage_rms /1000 % 10), (voltage_rms /100 % 10), (voltage_rms /10 % 10), (voltage_rms % 10));
+		printf("Peak Current is:  %dmA\r\n", current_pk);                  // Just transmitting.
 		printf("\r\n");
-		for (uint8_t i = 0; i < 40; i++){
-			printf("%lu\r\n", current_ac[i]);
-		}
-		_delay_ms(1000000);
+		_delay_ms(400);
+		//_delay_ms(1000000); //(testing)
 		
 		
 		// This is currently just a testing for power
