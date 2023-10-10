@@ -38,7 +38,7 @@ uint16_t adc_read(uint8_t chan){
 	 return ((ADCL << 0) | (ADCH << 8));
 }
 
-uint16_t adc_to_squaredadc(uint16_t adcvalues[40]){
+uint16_t adc_to_squaredadc(uint32_t adcvalues[40]){
 	// This function takes the value the adc read and stored.
 	// Square each individual value and it is den all summed together
 	// and it is divided by the sample size and squared.
@@ -46,21 +46,12 @@ uint16_t adc_to_squaredadc(uint16_t adcvalues[40]){
 	uint32_t adc_rms32 = 0;
 	
 	for (uint8_t i = 0; i < 40; i++){
-		adc_rms32 += (uint32_t)adcvalues[i] * (uint32_t)adcvalues[i];
-
+		adc_rms32 += adcvalues[i] * adcvalues[i];
 	}
 	
 	return sqrt(adc_rms32/40);
 }
 
-
-uint16_t adc_convert_mv(uint16_t voltage){
-	// This function converts adc reading to mV.
-	
-	uint32_t voltage_mv = 0;
-	voltage_mv = (uint32_t)voltage * 5000/1024;
-	return voltage_mv;
-}
 
 uint16_t adc_convert_ma(uint16_t current){
 	// This function converts adc reading to mA.

@@ -13,6 +13,7 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 #include <string.h>
+#include <stdlib.h>
 #include <stdio.h>
 
 // including all header files
@@ -40,12 +41,14 @@ int main(void)
 	uint16_t count = 0; // Just a temporary testing variable from Lab 6 for 7 segment
 	
 	// Create two arrays to store the values of voltage as well as current
-	uint16_t voltage[40] = {0};
-	uint16_t current[40] = {0};
+	uint16_t voltage_adc[40] = {0};
+	uint16_t current_adc[40] = {0};
+	uint32_t voltage_ac[40] = {0};
+	uint32_t current_ac[40] = {0};
 	
-	// This can be used later to calculate the Vrms/Irms
+	// This can be used later to calculate the Vrms/Ipk
 	uint16_t voltage_rms = 0;
-	uint16_t current_rms = 0;
+	uint16_t current_pk = 0;
 	
 	
 	// initializing baud rate for 2MHz
@@ -60,8 +63,7 @@ int main(void)
 	
     while (1) 
     {	
-		seperate_and_load_characters(count, 1);   // Leave like this for now (testing)
-		_delay_ms(400);							  // Will display RMS value of voltage and current later.
+		seperate_and_load_characters(count, 1);   // Leave like this for now (testing)						  // Will display RMS value of voltage and current later.
 		count++;
 		if (count > 9999){
 			count = 0;
@@ -70,19 +72,32 @@ int main(void)
 		// load the value read from adc to the array
 		// Should be implemented in ISR instead
 		for (uint8_t i = 0; i < 40; i++){
-			voltage[i] = adc_read(0);
-			current[i] = adc_read(1);
+			voltage_adc[i] = adc_read(0);
+			current_adc[i] = adc_read(1);
 		}
+		
+		
+		for (uint8_t i = 0; i < 40; i++){;
+			voltage_ac[i] = abs((((uint32_t)voltage_adc[i]*500/1024)-205) * 22);
+			current_ac[i] = abs((((uint32_t)current_adc[i]*500/1024)-205) * 2);
+		}
+
 		
 		// Converts the adc values to square and sum
 		// Than the value is converted to milli scale for easier display
-		voltage_rms = adc_convert_mv((adc_to_squaredadc(voltage)));
-		current_rms = adc_convert_ma(adc_to_squaredadc(current));
-	
+		voltage_rms = adc_to_squaredadc(voltage_ac);
+		current_pk = adc_to_squaredadc(current_ac);
+		
 		
 		// The values calculated above is now displayed		
-		printf("RMS Voltage is: %d.%d%d%d\r\n", (voltage_rms /1000 % 10), (voltage_rms /100 % 10), (voltage_rms /10 % 10), (voltage_rms % 10));
-		printf("RMS Current is:  %d.%d%d%d\r\n", (current_rms /1000 % 10), (current_rms /100 % 10), (current_rms /10 % 10), (current_rms % 10));                  // Just transmitting.
+		printf("RMS Voltage is: %d%d.%d%d\r\n", (voltage_rms /1000 % 10), (voltage_rms /100 % 10), (voltage_rms /10 % 10), (voltage_rms % 10));
+		printf("Peak Current is:  %1f\r\n", sqrt(2));                  // Just transmitting.
+
+		printf("\r\n");
+		for (uint8_t i = 0; i < 40; i++){
+			printf("%lu\r\n", current_ac[i]);
+		}
+		_delay_ms(1000000);
 		
 		
 		// This is currently just a testing for power
