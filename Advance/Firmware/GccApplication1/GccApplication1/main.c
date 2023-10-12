@@ -27,9 +27,8 @@
 
 // The lines below shall be removed later
 // Defining the references voltages and current/ power, these information will be collected from adc later on.
-#define Power 1.6
+/*#define Power 1.6*/
 // Making new variables so they can be converted to the format that is needed to display easier. (temporary)
-volatile uint16_t new_power = Power * 100;
 
 
 
@@ -52,6 +51,7 @@ int main(void)
 	// This can be used later to store the Vrms/Ipk
 	uint16_t voltage_rms = 0;
 	uint16_t current_pk = 0;
+	uint32_t power = 0;
 	
 	
 	// initializing baud rate for 2MHz
@@ -76,10 +76,6 @@ int main(void)
 		// Should be implemented in ISR instead
 		for (uint8_t i = 0; i < SAMPLESIZE; i++){
 			voltage_adc[i] = adc_read(0);
-			//current_adc[i] = adc_read(1);
-		}
-		for (uint8_t i = 0; i < SAMPLESIZE; i++){  //(Testing purposes)
-			//voltage_adc[i] = adc_read(0);
 			current_adc[i] = adc_read(1);
 		}
 		
@@ -94,17 +90,22 @@ int main(void)
 		
 		// Converts the adc values to square and sum
 		// AKA applying Riemann Sum
-// 		voltage_rms = adc_to_squaredadc(voltage_ac);//  * 14/10; If Vpk is needed this is den added.
-// 		current_pk = adc_to_squaredadc(current_ac);
-// 		// The Current is den converted to Peak
-// 		current_pk = current_pk * 14 / 10;
-// 				
-// 				
-// 		// The values calculated above is now displayed		
+		voltage_rms = adc_to_squaredadc(voltage_ac);//  * 14/10; If Vpk is needed this is den added.
+		current_pk = adc_to_squaredadc(current_ac);
+		// The Current is den converted to Peak
+		current_pk = current_pk * 14 / 10;
+		power = ((uint32_t)voltage_rms / 10) * ((uint32_t)current_pk * 10 / 141) * 4067/100000;
+				
+				
+		// The values calculated above is now displayed		
+		// Just transmitting.
 // 		printf("RMS Voltage is: %d%d.%d%dV\r\n", (voltage_rms /1000 % 10), (voltage_rms /100 % 10), (voltage_rms /10 % 10), (voltage_rms % 10));
-//  		printf("Peak Current is:  %dmA\r\n", current_pk);                  // Just transmitting.
-//  		printf("\r\n");
-//  		_delay_ms(400);
+//  	printf("Peak Current is:  %dmA\r\n", current_pk);
+// 		printf("Power: %luW\r\n", power);
+// 		printf("Vrms: %dV\r\n", voltage_rms / 10);
+// 		printf("Arms: %dA\r\n", current_pk * 10 / 140);
+//  	printf("\r\n");
+//  	_delay_ms(400);
  		printf("voltage,current\r\n");
 		for (uint8_t i = 0; i < SAMPLESIZE; i++){
 			printf("%li,%li\r\n", voltage_ac[i], current_ac[i]);
