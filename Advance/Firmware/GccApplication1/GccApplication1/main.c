@@ -95,16 +95,16 @@ int main(void)
 // 		current_pk = adc_to_squaredadc(current_ac);
 // 		// The Current is den converted to Peak
 // 		current_pk = current_pk * 14 / 10;
-// 		
-// 		
+// 				
+// 				
 // 		// The values calculated above is now displayed		
 // 		printf("RMS Voltage is: %d%d.%d%dV\r\n", (voltage_rms /1000 % 10), (voltage_rms /100 % 10), (voltage_rms /10 % 10), (voltage_rms % 10));
 // 		printf("Peak Current is:  %dmA\r\n", current_pk);                  // Just transmitting.
 // 		printf("\r\n");
-		//_delay_ms(400);
+//  		_delay_ms(400);
 		printf("Voltage,Current\r\n");
 		for (uint8_t i = 0; i < SAMPLESIZE; i++){
-			printf("%lu,%lu\r\n", voltage_ac[i], current_ac[i]);
+			printf("%d,%d\r\n", voltage_adc[i], current_adc[i]);
 		}
 		
 		
