@@ -38,7 +38,7 @@ uint16_t adc_read(uint8_t chan){
 	 return ((ADCL << 0) | (ADCH << 8));
 }
 
-uint16_t adc_to_squaredadc(uint32_t adcvalues[40]){
+uint16_t adc_to_squaredadc(long int adcvalues[40]){
 	// This function takes the value the adc read and stored.
 	// Square each individual value and it is den all summed together
 	// and it is divided by the sample size and squared.

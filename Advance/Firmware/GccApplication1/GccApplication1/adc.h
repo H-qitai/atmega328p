@@ -15,7 +15,7 @@
 void adc_init();
 uint16_t adc_read(uint8_t chan);
 
-uint16_t adc_to_squaredadc(uint32_t adcvalues[40]);
+uint16_t adc_to_squaredadc(long int adcvalues[40]);
 
 
 
