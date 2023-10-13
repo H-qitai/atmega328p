@@ -21,6 +21,7 @@
 #include "timer0.h"
 #include "display.h"
 #include "adc.h"
+#include "int0.h"
 
 // Macro
 #define SAMPLESIZE 40
@@ -29,9 +30,13 @@
 // Magic statement
 static FILE usart_stdout = FDEV_SETUP_STREAM(uart_printf, NULL, _FDEV_SETUP_WRITE);
 
+// Create two arrays to store the values of voltage as well as current
+volatile extern uint16_t voltage_adc[SAMPLESIZE] = {0};
+volatile extern uint16_t current_adc[SAMPLESIZE] = {0};
+
 int main(void)
 {
-	// magic
+	// magicvoid int0_init()
 	stdout = &usart_stdout;
 		
 	// initializing baud rate for 2MHz
@@ -40,20 +45,18 @@ int main(void)
 	// enable global interrupt
 	usart_init(12);
 	timer0_init();
+	int0_init();
 	display_init();
 	adc_init();
 	sei();
-
-	uint16_t count = 0; // Just a temporary testing variable from Lab 6 for 7 segment
 	
-	// Create two arrays to store the values of voltage as well as current
-	uint16_t voltage_adc[SAMPLESIZE] = {0};
-	uint16_t current_adc[SAMPLESIZE] = {0};
 	long int voltage_ac[SAMPLESIZE] = {0};
 	long int current_ac[SAMPLESIZE] = {0};
 	int voltage_bar[SAMPLESIZE] = {0};
 	int current_bar[SAMPLESIZE] = {0};
 	long int power[SAMPLESIZE] = {0};
+
+	uint16_t count = 0; // Just a temporary testing variable from Lab 6 for 7 segment
 	
 	// This can be used later to store the Vrms/Ipk
 	uint16_t voltage_rms = 0;
@@ -64,13 +67,6 @@ int main(void)
     while (1) 
     {	
 		seperate_and_load_characters(count, 1);   // Leave like this for now (testing)						  // Will display RMS value of voltage and current later.
-		
-		// load the value read from adc to the array
-		// Should be implemented in ISR instead
-		for (uint8_t i = 0; i < SAMPLESIZE; i++){
-			voltage_adc[i] = adc_read(0);
-			current_adc[i] = adc_read(1);
-		}
 		
 		// The values are den calculated and offset is removed
 		// Taking the absolute value make sure there will be no negatives when the offset is removed
@@ -112,10 +108,10 @@ int main(void)
 		// Just transmitting.
 		printf("RMS Voltage is: %d%d.%d%dV\r\n", (voltage_rms /1000 % 10), (voltage_rms /100 % 10), (voltage_rms /10 % 10), (voltage_rms % 10));
  		printf("Peak Current is:  %dmA\r\n", current_pk * 14 / 10);
-		printf("Power: %lu\r\n", powersum/80/1000);
+		printf("Power: %lu.%lu%luW\r\n", (powersum/80/1000)/100%10, (powersum/80/1000)/10%10, (powersum/80/1000)/1%10);
+		//printf("Energy: %iWh\r\n", current_pk/14*10 * voltage_rms);
+		printf("\r\n");
 		powersum = 0;
-		
-		_delay_ms(400);
 	}
 }
 

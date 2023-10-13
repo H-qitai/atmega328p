@@ -12,25 +12,27 @@
 #include <stdint.h>
 #include <math.h>
 
+#define SAMPLESIZE 40
 
 
 ISR(ADC_vect){
-	// This is where the adc reading will be.
-	// Implement later
+	for (uint8_t i = 0; i < SAMPLESIZE; i++){
+		voltage_adc[i] = adc_read(0);
+		current_adc[i] = adc_read(1);
+	}
 }
 
 void adc_init(void){
 	ADMUX |= (1<<REFS0); //AVCC set as reference, ADC0 selected and results are right adjusted
-	ADCSRA |= (1<<ADEN) | (1<<ADPS2) | (1<<ADIF) | (1<<ADATE); //Set ADEN bit to 1 (enable ADC) and prescaler to 100 (i.e. 16)
-	ADCSRB |= (1<<ADTS1); 
+	ADCSRA |= (1<<ADEN) | (1<<ADPS2) | (1<<ADIE) | (1<<ADATE); //Set ADEN bit to 1 (enable ADC) and prescaler to 100 (i.e. 16), Set on auto conversion mode
+	ADCSRB |= (1<<ADTS1);  // Trigger source is the zero voltage crossing on rising edge
 }
 
 uint16_t adc_read(uint8_t chan){
 	 ADMUX &= 0xF0;  // Channel clear.
 	 ADMUX |= chan;
 	 
-	 ADCSRA |= (1 << ADSC); // Start the conversion.... (Very important)
-	 
+	 ADCSRA |= (1<<ADSC);
 	 
 	 while (!(ADCSRA & (1<<ADIF))) { //ADIF bit is checked to see if it is 0 //If ADIF bit is not 1, wait until it becomes 1
 	 }
