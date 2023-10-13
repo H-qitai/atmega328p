@@ -21,67 +21,52 @@
 #include "timer0.h"
 #include "display.h"
 #include "adc.h"
+#include "int0.h"
 
 // Macro
 #define SAMPLESIZE 40
-
-// The lines below shall be removed later
-// Defining the references voltages and current/ power, these information will be collected from adc later on.
-#define Power 1.6
-// Making new variables so they can be converted to the format that is needed to display easier. (temporary)
-volatile uint16_t new_power = Power * 100;
-
 
 
 // Magic statement
 static FILE usart_stdout = FDEV_SETUP_STREAM(uart_printf, NULL, _FDEV_SETUP_WRITE);
 
+// Create two arrays to store the values of voltage as well as current
+volatile extern uint16_t voltage_adc[SAMPLESIZE] = {0};
+volatile extern uint16_t current_adc[SAMPLESIZE] = {0};
+
 int main(void)
 {
-	// magic
+	// magicvoid int0_init()
 	stdout = &usart_stdout;
 		
-	uint16_t count = 0; // Just a temporary testing variable from Lab 6 for 7 segment
-	
-	// Create two arrays to store the values of voltage as well as current
-	uint16_t voltage_adc[SAMPLESIZE] = {0};
-	uint16_t current_adc[SAMPLESIZE] = {0};
-	long int voltage_ac[SAMPLESIZE] = {0};
-	long int current_ac[SAMPLESIZE] = {0};
-	
-	// This can be used later to store the Vrms/Ipk
-	uint16_t voltage_rms = 0;
-	uint16_t current_pk = 0;
-	
-	
 	// initializing baud rate for 2MHz
 	// initialize timer0
 	// initialize display
 	// enable global interrupt
-	usart_init(12);  
+	usart_init(12);
 	timer0_init();
+	int0_init();
 	display_init();
 	adc_init();
 	sei();
 	
+	long int voltage_ac[SAMPLESIZE] = {0};
+	long int current_ac[SAMPLESIZE] = {0};
+	int voltage_bar[SAMPLESIZE] = {0};
+	int current_bar[SAMPLESIZE] = {0};
+	long int power[SAMPLESIZE] = {0};
+
+	uint16_t count = 0; // Just a temporary testing variable from Lab 6 for 7 segment
+	
+	// This can be used later to store the Vrms/Ipk
+	uint16_t voltage_rms = 0;
+	uint16_t current_pk = 0;
+	uint32_t powersum = 0;
+
+
     while (1) 
     {	
 		seperate_and_load_characters(count, 1);   // Leave like this for now (testing)						  // Will display RMS value of voltage and current later.
-		count++;
-		if (count > 9999){
-			count = 0;
-		}
-		
-		// load the value read from adc to the array
-		// Should be implemented in ISR instead
-		for (uint8_t i = 0; i < SAMPLESIZE; i++){
-			voltage_adc[i] = adc_read(0);
-			//current_adc[i] = adc_read(1);
-		}
-		for (uint8_t i = 0; i < SAMPLESIZE; i++){  //(Testing purposes)
-			//voltage_adc[i] = adc_read(0);
-			current_adc[i] = adc_read(1);
-		}
 		
 		// The values are den calculated and offset is removed
 		// Taking the absolute value make sure there will be no negatives when the offset is removed
@@ -92,42 +77,41 @@ int main(void)
 		}
 		
 		
+		for (uint8_t i = 0; i < SAMPLESIZE; i++){
+			if (i == SAMPLESIZE-1){
+				voltage_bar[i] = (voltage_ac[i] + voltage_ac[0])/2;
+			}else{
+				voltage_bar[i] = (voltage_ac[i] + voltage_ac[i+1])/2;
+			}
+			if (i == 0){
+				current_bar[i] = (current_ac[SAMPLESIZE-1] + current_ac[i])/2;
+			}else{
+				current_bar[i] = (current_ac[i-1] + current_ac[i])/2;
+			}
+		}
+		
+		for (uint8_t i = 0; i < SAMPLESIZE; i++){
+			power[i] = ((voltage_ac[i] * (long int) current_bar[i])) + (((long int) voltage_bar[i] * current_ac[i]));
+		}
+		
+		for (uint8_t i = 0; i < SAMPLESIZE; i++){
+			powersum = powersum + power[i];
+		}
+		
 		// Converts the adc values to square and sum
 		// AKA applying Riemann Sum
-// 		voltage_rms = adc_to_squaredadc(voltage_ac);//  * 14/10; If Vpk is needed this is den added.
-// 		current_pk = adc_to_squaredadc(current_ac);
-// 		// The Current is den converted to Peak
-// 		current_pk = current_pk * 14 / 10;
-// 				
-// 				
-// 		// The values calculated above is now displayed		
-// 		printf("RMS Voltage is: %d%d.%d%dV\r\n", (voltage_rms /1000 % 10), (voltage_rms /100 % 10), (voltage_rms /10 % 10), (voltage_rms % 10));
-//  		printf("Peak Current is:  %dmA\r\n", current_pk);                  // Just transmitting.
-//  		printf("\r\n");
-//  		_delay_ms(400);
- 		printf("voltage,current\r\n");
-		for (uint8_t i = 0; i < SAMPLESIZE; i++){
-			printf("%li,%li\r\n", voltage_ac[i], current_ac[i]);
-		}
+		voltage_rms = adc_to_squaredadc(voltage_ac);//  * 14/10; If Vpk is needed this is den added.
+		current_pk = adc_to_squaredadc(current_ac);
+				
+				
+		// The values calculated above is now displayed		
+		// Just transmitting.
+		printf("RMS Voltage is: %d%d.%d%dV\r\n", (voltage_rms /1000 % 10), (voltage_rms /100 % 10), (voltage_rms /10 % 10), (voltage_rms % 10));
+ 		printf("Peak Current is:  %dmA\r\n", current_pk * 14 / 10);
+		printf("Power: %lu.%lu%luW\r\n", (powersum/80/1000)/100%10, (powersum/80/1000)/10%10, (powersum/80/1000)/1%10);
+		//printf("Energy: %iWh\r\n", current_pk/14*10 * voltage_rms);
 		printf("\r\n");
-// 		for (uint8_t i = 0; i < SAMPLESIZE; i++){
-// 			printf("%d,%d\r\n", current_ac[i], current_adc[i]);
-// 		}
-		
-		_delay_ms(1000000); //(testing)
-		
-		
-		// This is currently just a testing for power
-		// Real power calculation will come later
-		
-// 		uart_transmit_msg("Power is: ");
-// 		uart_transmit_char(new_power /100 % 10  + 48);
-// 		uart_transmit_char('.');
-// 		uart_transmit_char(new_power /10 % 10  + 48);
-// 		uart_transmit_char(new_power /1 % 10  + 48);
-// 		uart_transmit_msg("\r\n");
-// 		uart_transmit_msg("\r\n");
-    
+		powersum = 0;
 	}
 }
 
