@@ -108,7 +108,7 @@ int main(void)
 		// Just transmitting.
 		printf("RMS Voltage is: %d%d.%d%dV\r\n", (voltage_rms /1000 % 10), (voltage_rms /100 % 10), (voltage_rms /10 % 10), (voltage_rms % 10));
  		printf("Peak Current is:  %dmA\r\n", current_pk * 14 / 10);
-		printf("Power: %lu.%lu%luW\r\n", (powersum/80/1000)/100%10, (powersum/80/1000)/10%10, (powersum/80/1000)/1%10);
+		printf("Power: %lu%lu.%lu%luW\r\n",(powersum/80/1000)/1000%10, (powersum/80/1000)/100%10, (powersum/80/1000)/10%10, (powersum/80/1000)/1%10);
 		//printf("Energy: %iWh\r\n", current_pk/14*10 * voltage_rms);
 		printf("\r\n");
 		powersum = 0;
