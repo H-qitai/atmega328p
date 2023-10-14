@@ -90,7 +90,7 @@ int main(void)
 		
 		// Calculating all instantaneous power
 		for (uint8_t i = 0; i < SAMPLESIZE; i++){
-			power[i] = ((voltage_ac[i] * (long int) current_bar[i])) + (((long int) voltage_bar[i] * current_ac[i]));
+			power[i] = ((voltage_ac[i] * current_bar[i])) + ((voltage_bar[i] * current_ac[i]));
 		}
 		
 		// Summing all instantaneous for average power later
