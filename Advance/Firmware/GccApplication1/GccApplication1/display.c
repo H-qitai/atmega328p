@@ -31,10 +31,10 @@ const uint8_t seg_pattern[10] = {
 };
 
 //4 characters to be displayed on Ds1 to Ds 4
-static volatile uint8_t disp_characters[4]={0,0,0,0};
+volatile uint8_t disp_characters[4]={0,0,0,0};
 
 //The current digit (e.g. the 1's, the 10's) of the 4-digit number we're displaying
-static volatile uint8_t disp_position = 0;
+volatile uint8_t disp_position = 0;
 
 
 void display_init(){
@@ -43,18 +43,23 @@ void display_init(){
 	// SH_CP/SH_DS/SH_ST set to output
 	DDRC |= (SH_CP) | (SH_DS) | (SH_ST);
 	// Ds1/Ds2/Ds3/Ds4 set to output
-	DDRD |= (1 << PD4) | (1 << PD5) | (1 << PD6) | (1 << PD7);
+	DDRD |= (1 << PIND4) | (1 << PIND5) | (1 << PIND6) | (1 << PIND7);
 
 }
 
 void seperate_and_load_characters(uint16_t number, uint8_t decimal_pos){
 	// This function shifts the input number into their position in the position array.
+	// As well as add the decimal point needed to display
+
 	
 	disp_characters[0] = seg_pattern[number/1000];
 	disp_characters[1] = seg_pattern[number/100%10];
 	disp_characters[2] = seg_pattern[number/10%10];
 	disp_characters[3] = seg_pattern[number%10];
-		
+
+	if (decimal_pos > 0){
+		disp_characters[decimal_pos - 1] |= (1<<7);
+	}
 }
 
 void send_next_character_to_display(void){
@@ -80,7 +85,7 @@ void send_next_character_to_display(void){
 	
 	
 	// Ds1/Ds2/Ds3/Ds4 are cleared and wont display anything (active high)
-	PORTD |= (1<<PD4) | (1<<PD5) | (1<<PD6) | (1<<PD7);
+	PORTD |= (1<<PIND4) | (1<<PIND5) | (1<<PIND6) | (1<<PIND7);
 	
 		// Toggling this will latch the output
 		PORTC |= SH_ST;
@@ -89,16 +94,16 @@ void send_next_character_to_display(void){
 	    // Enable the correct digit to be displayed on Ds1..4
 	    switch (disp_position){
 			case 0:
-				PORTD &= ~(1<<PD4);
+				PORTD &= ~(1<<PIND4);
 				break;
 			case 1:
-				PORTD &= ~(1<<PD5);
+				PORTD &= ~(1<<PIND5);
 				break;
 			case 2:
-				PORTD &= ~(1<<PD6);
+				PORTD &= ~(1<<PIND6);
 				break;
 			case 3:
-				PORTD &= ~(1<<PD7);
+				PORTD &= ~(1<<PIND7);
 				break;
 		}
 	    

@@ -6,20 +6,44 @@
  */ 
 #include "timer0.h"
 #include "display.h"
+#include "uart.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdint.h>
 
+volatile uint16_t counter = 0;
+volatile uint8_t displayinfo = 0;
+volatile uint16_t dispvoltage = 0;
+volatile uint16_t dispcurrent = 0;
+volatile uint16_t disppower = 0;
 
-ISR(TIMER0_COMPA_vect) { 
+ISR(TIMER0_COMPA_vect) {
+
+	if (counter == 200){
+		counter = 0;
+		switch (displayinfo){
+			case 0:
+				seperate_and_load_characters(dispvoltage, 2);
+				break;
+			case 1:
+				seperate_and_load_characters(dispcurrent, 1);
+				break;
+			case 2:
+				seperate_and_load_characters(disppower, 2);
+				break;
+		}
+		displayinfo++;
+		if (displayinfo == 4){
+			displayinfo = 0;
+		}
+	}
+	counter++;
 	send_next_character_to_display();
 }
 
-
 ISR(TIMER0_OVF_vect){
-	// What is this for?
-	// i forgot
-	// Might've found an alternative forgot
+	// This ISR is never reached in CTC mode.
+	// Unless OCR0A = 255;
 }
 
 
@@ -31,11 +55,10 @@ void timer0_init() {
 	// Enable interrupt
 	TIMSK0 |= (1<<OCIE0A);
 
-	// Set the compare value for 10ms (9.984ms) 78?*F_CPU/256
-	// the value of 77 is fine in proteus but on the actual 7 segment is flickering
-	// therefore i just changed the value randomly to 10
-	// which will be roughly 1.28ms
-	OCR0A = 10;
+	// Set the compare value time a time of approximately 1ms
+	// Tmatch = (OCRvalue + 1) / Ftimer
+	// 1ms * 2Mhz/256 - 1 approx = 7
+	OCR0A = 7;
 	
 	// Set the count value to zero
 	TCNT0 = 0;

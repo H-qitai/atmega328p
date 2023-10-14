@@ -11,6 +11,9 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+volatile uint16_t dispvoltage;
+volatile uint16_t dispcurrent;
+volatile uint16_t disppower;
 
 //Initialize timer0 as per Part 1
 void timer0_init();

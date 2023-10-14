@@ -31,12 +31,17 @@
 static FILE usart_stdout = FDEV_SETUP_STREAM(uart_printf, NULL, _FDEV_SETUP_WRITE);
 
 // Create two arrays to store the values of voltage as well as current
+// These arrays stores the ADC value when ISR is triggered.
 volatile extern uint16_t voltage_adc[SAMPLESIZE] = {0};
 volatile extern uint16_t current_adc[SAMPLESIZE] = {0};
+// This can be used later to store the Vrms/Ipk
+// volatile extern	uint16_t voltage_rms = 0;
+// volatile extern	uint16_t current_pk = 0;
+// volatile extern	uint32_t powersum = 0;
 
 int main(void)
 {
-	// magicvoid int0_init()
+	// magic
 	stdout = &usart_stdout;
 		
 	// initializing baud rate for 2MHz
@@ -50,33 +55,26 @@ int main(void)
 	adc_init();
 	sei();
 	
+	// Declare the variable and arrays needed for calculation later
 	long int voltage_ac[SAMPLESIZE] = {0};
 	long int current_ac[SAMPLESIZE] = {0};
 	int voltage_bar[SAMPLESIZE] = {0};
 	int current_bar[SAMPLESIZE] = {0};
 	long int power[SAMPLESIZE] = {0};
-
-	uint16_t count = 0; // Just a temporary testing variable from Lab 6 for 7 segment
-	
-	// This can be used later to store the Vrms/Ipk
 	uint16_t voltage_rms = 0;
 	uint16_t current_pk = 0;
 	uint32_t powersum = 0;
 
-
     while (1) 
-    {	
-		seperate_and_load_characters(count, 1);   // Leave like this for now (testing)						  // Will display RMS value of voltage and current later.
-		
-		// The values are den calculated and offset is removed
-		// Taking the absolute value make sure there will be no negatives when the offset is removed
-		// As the microcontroller can't deal with negatives
+    {		
+		// Converting ADC value to Voltage/100 and mA
+		// Offset is stripped and formulas applied.
 		for (uint8_t i = 0; i < SAMPLESIZE; i++){;
 			voltage_ac[i] = ((((long int)voltage_adc[i]*500/1024)-205) * 22);
 			current_ac[i] = ((((long int)current_adc[i]*5000/1024)-2053) * 2);
 		}
 		
-		
+		// Applying linear approximation for 
 		for (uint8_t i = 0; i < SAMPLESIZE; i++){
 			if (i == SAMPLESIZE-1){
 				voltage_bar[i] = (voltage_ac[i] + voltage_ac[0])/2;
@@ -90,27 +88,35 @@ int main(void)
 			}
 		}
 		
+		// Calculating all instantaneous power
 		for (uint8_t i = 0; i < SAMPLESIZE; i++){
 			power[i] = ((voltage_ac[i] * (long int) current_bar[i])) + (((long int) voltage_bar[i] * current_ac[i]));
 		}
 		
+		// Summing all instantaneous for average power later
 		for (uint8_t i = 0; i < SAMPLESIZE; i++){
 			powersum = powersum + power[i];
 		}
 		
 		// Converts the adc values to square and sum
 		// AKA applying Riemann Sum
+		// Convert Pinstantaenous to Paverage(Real power)
 		voltage_rms = adc_to_squaredadc(voltage_ac);//  * 14/10; If Vpk is needed this is den added.
 		current_pk = adc_to_squaredadc(current_ac);
+		powersum = powersum/80/1000;
 				
 				
 		// The values calculated above is now displayed		
 		// Just transmitting.
 		printf("RMS Voltage is: %d%d.%d%dV\r\n", (voltage_rms /1000 % 10), (voltage_rms /100 % 10), (voltage_rms /10 % 10), (voltage_rms % 10));
  		printf("Peak Current is:  %dmA\r\n", current_pk * 14 / 10);
-		printf("Power: %lu%lu.%lu%luW\r\n",(powersum/80/1000)/1000%10, (powersum/80/1000)/100%10, (powersum/80/1000)/10%10, (powersum/80/1000)/1%10);
+		printf("Power is: %lu%lu.%lu%luW\r\n",(powersum /1000 %10), (powersum /100 %10), (powersum /10 %10), (powersum /1 % 10));
 		//printf("Energy: %iWh\r\n", current_pk/14*10 * voltage_rms);
 		printf("\r\n");
+
+		dispvoltage = voltage_rms;
+		dispcurrent = current_pk*14/10;
+		disppower = powersum;
 		powersum = 0;
 	}
 }
