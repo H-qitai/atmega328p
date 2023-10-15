@@ -13,10 +13,10 @@
 
 void display_init();
 
-const uint8_t number[10];
+const uint8_t number[13];
 
 void send_next_character_to_display();
-void seperate_and_load_characters(uint16_t number, uint8_t decimal_pos);
+void seperate_and_load_characters(uint16_t number, uint8_t decimal_pos, uint8_t info);
 
 
 #endif /* DISPLAY_H_ */

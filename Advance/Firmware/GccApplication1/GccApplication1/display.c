@@ -17,7 +17,7 @@
 #define SH_ST (1<<PC5)
 
 
-const uint8_t seg_pattern[10] = {
+const uint8_t seg_pattern[13] = {
 	0b00111111, // 0
 	0b00000110, // 1
 	0b01011011, // 2
@@ -27,7 +27,10 @@ const uint8_t seg_pattern[10] = {
 	0b01111101, // 6
 	0b00000111, // 7
 	0b01111111, // 8
-	0b01101111 // 9
+	0b01101111, // 9
+	0b00111110, //V
+	0b01110111, //A
+	0b01110011	//P
 };
 
 //4 characters to be displayed on Ds1 to Ds 4
@@ -47,12 +50,21 @@ void display_init(){
 
 }
 
-void seperate_and_load_characters(uint16_t number, uint8_t decimal_pos){
+void seperate_and_load_characters(uint16_t number, uint8_t decimal_pos, uint8_t info){
 	// This function shifts the input number into their position in the position array.
 	// As well as add the decimal point needed to display
 
-	
-	disp_characters[0] = seg_pattern[number/1000];
+	switch (info){
+		case 1:
+			disp_characters[0] = seg_pattern[10];
+		break;
+		case 2:
+			disp_characters[0] = seg_pattern[11];
+		break;
+		case 3:
+			disp_characters[0] = seg_pattern[12];
+		break;
+	}
 	disp_characters[1] = seg_pattern[number/100%10];
 	disp_characters[2] = seg_pattern[number/10%10];
 	disp_characters[3] = seg_pattern[number%10];

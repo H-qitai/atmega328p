@@ -18,7 +18,8 @@ volatile extern uint16_t current_adc[SAMPLESIZE];
 void adc_init();
 uint16_t adc_read(uint8_t chan);
 
-uint16_t adc_to_squaredadc(long int adcvalues[40]);
+uint16_t Vadc_to_Vsquaredadc(float adcvalues[40]);
+uint16_t Iadc_to_Isquaredadc(float adcvalues[40]);
 
 
 

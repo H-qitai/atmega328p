@@ -34,10 +34,7 @@ static FILE usart_stdout = FDEV_SETUP_STREAM(uart_printf, NULL, _FDEV_SETUP_WRIT
 // These arrays stores the ADC value when ISR is triggered.
 volatile extern uint16_t voltage_adc[SAMPLESIZE] = {0};
 volatile extern uint16_t current_adc[SAMPLESIZE] = {0};
-// This can be used later to store the Vrms/Ipk
-// volatile extern	uint16_t voltage_rms = 0;
-// volatile extern	uint16_t current_pk = 0;
-// volatile extern	uint32_t powersum = 0;
+
 
 int main(void)
 {
@@ -56,22 +53,22 @@ int main(void)
 	sei();
 	
 	// Declare the variable and arrays needed for calculation later
-	long int voltage_ac[SAMPLESIZE] = {0};
-	long int current_ac[SAMPLESIZE] = {0};
-	int voltage_bar[SAMPLESIZE] = {0};
-	int current_bar[SAMPLESIZE] = {0};
-	long int power[SAMPLESIZE] = {0};
+	float voltage_ac[SAMPLESIZE] = {0};
+	float current_ac[SAMPLESIZE] = {0};
+	float voltage_bar[SAMPLESIZE] = {0};
+	float current_bar[SAMPLESIZE] = {0};
+	float power[SAMPLESIZE] = {0};
 	uint16_t voltage_rms = 0;
 	uint16_t current_pk = 0;
-	uint32_t powersum = 0;
+	float powersum = 0;
 
     while (1) 
     {		
 		// Converting ADC value to Voltage/100 and mA
 		// Offset is stripped and formulas applied.
 		for (uint8_t i = 0; i < SAMPLESIZE; i++){;
-			voltage_ac[i] = ((((long int)voltage_adc[i]*500/1024)-205) * 22);
-			current_ac[i] = ((((long int)current_adc[i]*5000/1024)-2053) * 2);
+			voltage_ac[i] = (((((float)voltage_adc[i])*5.0/1024)-2.053) * 21.74);
+			current_ac[i] = (((((float)current_adc[i])*5.0/1024)-2.053) * 2);
 		}
 		
 		// Applying linear approximation for 
@@ -101,23 +98,23 @@ int main(void)
 		// Converts the adc values to square and sum
 		// AKA applying Riemann Sum
 		// Convert Pinstantaenous to Paverage(Real power)
-		voltage_rms = adc_to_squaredadc(voltage_ac);//  * 14/10; If Vpk is needed this is den added.
-		current_pk = adc_to_squaredadc(current_ac);
-		powersum = powersum/80/1000;
-				
-				
+		voltage_rms = Vadc_to_Vsquaredadc(voltage_ac);//  * 14/10; If Vpk is needed this is den added.
+		current_pk = Iadc_to_Isquaredadc(current_ac);
+		powersum = powersum*10/80;	
+		
 		// The values calculated above is now displayed		
 		// Just transmitting.
-		printf("RMS Voltage is: %d%d.%d%dV\r\n", (voltage_rms /1000 % 10), (voltage_rms /100 % 10), (voltage_rms /10 % 10), (voltage_rms % 10));
- 		printf("Peak Current is:  %dmA\r\n", current_pk * 14 / 10);
-		printf("Power is: %lu%lu.%lu%luW\r\n",(powersum /1000 %10), (powersum /100 %10), (powersum /10 %10), (powersum /1 % 10));
-		//printf("Energy: %iWh\r\n", current_pk/14*10 * voltage_rms);
+		printf("RMS Voltage is: %d%d.%dV\r\n", (voltage_rms/100%10), (voltage_rms/10%10), (voltage_rms%10));
+ 		printf("Peak Current is:  %d.%d%dA\r\n", (current_pk/100%10), (current_pk/10%10), (current_pk%10));
+		printf("Power is: %d%d.%dW\r\n",((uint16_t)powersum /100 %10), ((uint16_t)powersum /10 %10), ((uint16_t)powersum %10));
 		printf("\r\n");
 
 		dispvoltage = voltage_rms;
-		dispcurrent = current_pk*14/10;
+		dispcurrent = current_pk;
 		disppower = powersum;
-		powersum = 0;
+ 		powersum = 0;
+		
+		//_delay_ms(10000000);  // Testing
 	}
 }
 

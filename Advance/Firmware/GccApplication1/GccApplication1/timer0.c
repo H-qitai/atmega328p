@@ -19,17 +19,17 @@ volatile uint16_t disppower = 0;
 
 ISR(TIMER0_COMPA_vect) {
 
-	if (counter == 200){
+	if (counter == 1000){
 		counter = 0;
 		switch (displayinfo){
 			case 0:
-				seperate_and_load_characters(dispvoltage, 2);
+				seperate_and_load_characters(dispvoltage, 3, 1);
 				break;
 			case 1:
-				seperate_and_load_characters(dispcurrent, 1);
+				seperate_and_load_characters(dispcurrent, 2, 2);
 				break;
 			case 2:
-				seperate_and_load_characters(disppower, 2);
+				seperate_and_load_characters(disppower, 3, 3);
 				break;
 		}
 		displayinfo++;

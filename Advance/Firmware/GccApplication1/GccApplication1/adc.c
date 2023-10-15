@@ -24,7 +24,7 @@ ISR(ADC_vect){
 
 void adc_init(void){
 	ADMUX |= (1<<REFS0); //AVCC set as reference, ADC0 selected and results are right adjusted
-	ADCSRA |= (1<<ADEN) | (1<<ADPS2) | (1<<ADIE) | (1<<ADATE); //Set ADEN bit to 1 (enable ADC) and prescaler to 100 (i.e. 16), Set on auto conversion mode
+	ADCSRA |= (1<<ADEN) | (1<<ADPS2) | (1<<ADIE) | (1<<ADATE) | (1<<ADSC); //Set ADEN bit to 1 (enable ADC) and prescaler to 100 (i.e. 16), Set on auto conversion mode
 	ADCSRB |= (1<<ADTS1);  // Trigger source is the zero voltage crossing on rising edge
 }
 
@@ -32,6 +32,7 @@ uint16_t adc_read(uint8_t chan){
 	 ADMUX &= 0xF0;  // Channel clear.
 	 ADMUX |= chan;
 	 
+	 // Start conversion
 	 ADCSRA |= (1<<ADSC);
 	 
 	 while (!(ADCSRA & (1<<ADIF))) { //ADIF bit is checked to see if it is 0 //If ADIF bit is not 1, wait until it becomes 1
@@ -40,16 +41,36 @@ uint16_t adc_read(uint8_t chan){
 	 return ((ADCL << 0) | (ADCH << 8));
 }
 
-uint16_t adc_to_squaredadc(long int adcvalues[40]){
+uint16_t Vadc_to_Vsquaredadc(float adcvalues[40]){
 	// This function takes the value the adc read and stored.
 	// Square each individual value and it is den all summed together
 	// and it is divided by the sample size and squared.
 	
-	uint32_t adc_rms32 = 0;
+	float adc_rms32 = 0.0;
+	float rms = 0;
 	
 	for (uint8_t i = 0; i < 40; i++){
-		adc_rms32 += adcvalues[i] * adcvalues[i];
+		adc_rms32 = (adcvalues[i] * adcvalues[i]);
+		rms = adc_rms32 + rms;
 	}
+	rms = sqrt(rms/40.0)*10;
 	
-	return sqrt(adc_rms32/40);
+	return (uint16_t) rms;
+}
+
+uint16_t Iadc_to_Isquaredadc(float adcvalues[40]){
+	// This function takes the value the adc read and stored.
+	// Square each individual value and it is den all summed together
+	// and it is divided by the sample size and squared.
+	
+	float adc_rms32 = 0.0;
+	float rms = 0;
+	
+	for (uint8_t i = 0; i < 40; i++){
+		adc_rms32 = (adcvalues[i] * adcvalues[i]);
+		rms = adc_rms32 + rms;
+	}
+	rms = sqrt(rms/40.0)*100*sqrt(2);
+	
+	return (uint16_t) rms;
 }
