@@ -20,7 +20,7 @@ uint16_t adc_read(uint8_t chan);
 
 uint16_t Vadc_to_Vsquaredadc(float adcvalues[40]);
 uint16_t Iadc_to_Isquaredadc(float adcvalues[40]);
-
+float linear_approximation(float vac[SAMPLESIZE], float iac[SAMPLESIZE]);
 
 
 #endif

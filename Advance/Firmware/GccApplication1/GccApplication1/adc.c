@@ -7,7 +7,7 @@
 
 #include "adc.h"
 #include "uart.h"
-#include <avr/io.h> //Necessary for definitions of ADMUX etc
+#include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdint.h>
 #include <math.h>
@@ -70,7 +70,45 @@ uint16_t Iadc_to_Isquaredadc(float adcvalues[40]){
 		adc_rms32 = (adcvalues[i] * adcvalues[i]);
 		rms = adc_rms32 + rms;
 	}
-	rms = sqrt(rms/40.0)*100*sqrt(2);
+	rms = sqrt(rms/40.0)*sqrt(2)*100;
 	
 	return (uint16_t) rms;
+}
+
+
+float linear_approximation(float vac[SAMPLESIZE], float iac[SAMPLESIZE]){
+	// Declare the values needed for calculation
+    float power = 0;
+	float voltage_bar = 0;
+	float current_bar = 0;
+	float instantaneous_power = 0;
+
+
+	// Implement linear approximation and sum all instantaneous power
+    for (uint8_t i = 0; i < SAMPLESIZE; i++) {
+		voltage_bar = 0;
+		current_bar = 0;
+		instantaneous_power = 0;
+
+	    // Calculate voltage_bar and current_bar
+	    if (i == 0) {
+		    voltage_bar = (vac[i] + vac[i+1]) / 2;
+		    current_bar = (iac[SAMPLESIZE-1] + iac[i]) / 2;
+		}else if (i == SAMPLESIZE - 1) {
+		    voltage_bar = (vac[i] + vac[0]) / 2;
+		    current_bar = (iac[i-1] + iac[i]) / 2;
+		}else{
+		    voltage_bar = (vac[i] + vac[i+1]) / 2;
+		    current_bar = (iac[i-1] + iac[i]) / 2;
+	    }
+
+	    // Calculate instantaneous power for the current sample
+	    instantaneous_power = (vac[i] * current_bar) + (voltage_bar * iac[i]);
+
+	    // Accumulate the instantaneous power
+	    power = power + instantaneous_power;
+    }
+	
+	// Scale and convert to Average power (Real)
+    return power*10/80;
 }
