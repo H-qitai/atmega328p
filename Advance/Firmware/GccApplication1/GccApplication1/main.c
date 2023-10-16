@@ -44,8 +44,8 @@ int main(void)
 	// Declare the variable and arrays needed for calculation later
 	volatile float voltage_ac[SAMPLESIZE] = {0};
 	volatile float current_ac[SAMPLESIZE] = {0};
-	volatile uint16_t voltage_rms = 0;
-	volatile uint16_t current_pk = 0;
+	volatile uint16_t voltage_pk = 0;
+	volatile uint16_t current_rms = 0;
 	volatile uint16_t power = 0;
 	uint8_t count = 0;
 		
@@ -57,6 +57,8 @@ int main(void)
 	int0_init();
 	display_init();
 	adc_init();
+	
+	
 	// enable global interrupt
 	sei();
 
@@ -68,37 +70,34 @@ int main(void)
 		
 		for (uint8_t i = 0; i < SAMPLESIZE; i++){
 			voltage_ac[i] = (((((float)voltage_adc[i])*5.0/1024)-2.053) * 21.74);
-			current_ac[i] = (((((float)current_adc[i])*5.0/1024)-2.053) * 2);
+			current_ac[i] = (((((float)current_adc[i])*5.0/1024)-2.053) / 1.1);
 		}
 		
 		// Converts the adc values to square and sum
 		// AKA applying Riemann Sum
 		// Convert Pinstantaenous to Paverage(Real power)
-		voltage_rms = Vadc_to_Vsquaredadc(voltage_ac);//  * 14/10; If Vpk is needed this is den added.
-		current_pk = Iadc_to_Isquaredadc(current_ac);
+		voltage_pk = Vadc_to_Vsquaredadc(voltage_ac);//  * 14/10; If Vpk is needed this is den added.
+		current_rms = Iadc_to_Isquaredadc(current_ac);
 		power = linear_approximation(voltage_ac, current_ac);
 		
 		// The values calculated above is now displayed
 		// Just transmitting.
-		printf("RMS Voltage is: %d%d.%dV\r\n", (voltage_rms/100%10), (voltage_rms/10%10), (voltage_rms%10));
- 		printf("Peak Current is:  %d.%d%dA\r\n", (current_pk/100%10), (current_pk/10%10), (current_pk%10));
+		printf("The peak voltage is: %d%d.%dV\r\n", (voltage_pk/100%10), (voltage_pk/10%10), (voltage_pk%10));
+ 		printf("The RMS current is:  %d.%d%dA\r\n", (current_rms/100%10), (current_rms/10%10), (current_rms%10));
 /* 		printf("Power is: %d%d.%dW\r\n",(power /100 %10), (power /10 %10), (power %10));*/
 // 		printf("\r\n");
 // 
-		for (uint8_t i = 0; i < SAMPLESIZE; i++){
-			/*printf("%d,%d\r\n", (uint16_t)voltage_ac[i]*100, (uint16_t)current_ac[i]*1000);*/
-			printf("%d,%d\r\n", voltage_adc[i], current_adc[i]);
-		}
-		printf("power:%d\r\n", power);
-		
-		if (count == 3){
-  			_delay_ms(10000);
-		}
+// 		for (uint8_t i = 0; i < SAMPLESIZE; i++){
+// 			/*printf("%d,%d\r\n", (uint16_t)voltage_ac[i]*100, (uint16_t)current_ac[i]*1000);*/
+// 			printf("%i\r\n", (int)current_ac[i]*100); //(uint16_t)(current_ac[i]*10000));
+// 		}
+		/*printf("power:%d\r\n", power);*/
 
-		dispvoltage = voltage_rms;
-		dispcurrent = current_pk;
+		dispvoltage = voltage_pk;
+		dispcurrent = current_rms;
 		disppower = power;
 		flag = 0;
+		_delay_ms(100);
 	}
 }
 

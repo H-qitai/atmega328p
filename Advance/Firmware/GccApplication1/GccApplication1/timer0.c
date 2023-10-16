@@ -7,13 +7,14 @@
 #include "timer0.h"
 #include "display.h"
 #include "uart.h"
+#include "adc.h"
 #include <avr/io.h>
 #include <avr/interrupt.h>
 #include <stdint.h>
 
 
 ISR(TIMER0_COMPA_vect) {
-	
+
 }
 
 

@@ -18,8 +18,8 @@ volatile extern uint16_t current_adc[SAMPLESIZE];
 void adc_init();
 uint16_t adc_read(uint8_t chan);
 
-uint16_t Vadc_to_Vsquaredadc(volatile float adcvalues[40]);
-uint16_t Iadc_to_Isquaredadc(volatile float adcvalues[40]);
+uint16_t Vadc_to_Vsquaredadc(volatile float acvalues[40]);
+uint16_t Iadc_to_Isquaredadc(volatile float acvalues[40]);
 float linear_approximation(volatile float vac[SAMPLESIZE],volatile float iac[SAMPLESIZE]);
 volatile uint8_t flag;
 
