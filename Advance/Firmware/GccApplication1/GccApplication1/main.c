@@ -47,8 +47,7 @@ int main(void)
 	volatile uint16_t voltage_pk = 0;
 	volatile uint16_t current_rms = 0;
 	volatile uint16_t power = 0;
-	uint8_t count = 0;
-		
+
 	// initializing baud rate for 2MHz
 	// initialize timer0
 	// initialize display
@@ -63,20 +62,19 @@ int main(void)
 	sei();
 
     while (1)
-    {		
+    {	
+		
 		// Converting ADC value to Voltage/100 and mA
 		// Offset is stripped and formulas applied.
-
-		
 		for (uint8_t i = 0; i < SAMPLESIZE; i++){
-			voltage_ac[i] = (((((float)voltage_adc[i])*5.0/1024)-2.053) * 21.74);
-			current_ac[i] = (((((float)current_adc[i])*5.0/1024)-2.053) / 1.1);
+			voltage_ac[i] = adc_to_V(voltage_adc[i]);
+			current_ac[i] = adc_to_A(current_adc[i]);
 		}
 		
 		// Converts the adc values to square and sum
 		// AKA applying Riemann Sum
 		// Convert Pinstantaenous to Paverage(Real power)
-		voltage_pk = Vadc_to_Vsquaredadc(voltage_ac);//  * 14/10; If Vpk is needed this is den added.
+		voltage_pk = Vadc_to_Vsquaredadc(voltage_ac);
 		current_rms = Iadc_to_Isquaredadc(current_ac);
 		power = linear_approximation(voltage_ac, current_ac);
 		
@@ -84,20 +82,13 @@ int main(void)
 		// Just transmitting.
 		printf("The peak voltage is: %d%d.%dV\r\n", (voltage_pk/100%10), (voltage_pk/10%10), (voltage_pk%10));
  		printf("The RMS current is:  %d.%d%dA\r\n", (current_rms/100%10), (current_rms/10%10), (current_rms%10));
-/* 		printf("Power is: %d%d.%dW\r\n",(power /100 %10), (power /10 %10), (power %10));*/
-// 		printf("\r\n");
-// 
-// 		for (uint8_t i = 0; i < SAMPLESIZE; i++){
-// 			/*printf("%d,%d\r\n", (uint16_t)voltage_ac[i]*100, (uint16_t)current_ac[i]*1000);*/
-// 			printf("%i\r\n", (int)current_ac[i]*100); //(uint16_t)(current_ac[i]*10000));
-// 		}
-		/*printf("power:%d\r\n", power);*/
+		printf("Power is: %d%d.%dW\r\n",(power /100 %10), (power /10 %10), (power %10));
+		printf("\r\n");
 
 		dispvoltage = voltage_pk;
 		dispcurrent = current_rms;
 		disppower = power;
 		flag = 0;
-		_delay_ms(100);
 	}
 }
 

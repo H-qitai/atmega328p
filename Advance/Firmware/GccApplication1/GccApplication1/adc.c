@@ -16,6 +16,7 @@
 volatile uint8_t i = 0;
 volatile uint8_t j = 0;
 volatile uint8_t flag = 0;
+volatile uint8_t read = 0;
 
 
 ISR(ADC_vect){
@@ -24,16 +25,34 @@ ISR(ADC_vect){
 			voltage_adc[i] = adc_read(0);
 
 		} else if (i >= SAMPLESIZE){
-			current_adc[i-SAMPLESIZE] = adc_read(1);
+			current_adc[i - SAMPLESIZE] = adc_read(1);
 		}
+		i++;
 		if (i >= SAMPLESIZE*2){
 			i = 0;
 			flag = 1;
 		}
-		i++;
+		
 		TIFR0 |= (1<<OCF0A);
 	}
 }
+// 
+// 	if (flag == 0){
+// 		if (read == 0){
+// 			voltage_adc[i] = adc_read(1);
+// 			read = 1;
+// 			i++;
+// 			} else if (read == 1){
+// 			current_adc[j] = adc_read(0);
+// 			read = 0;
+// 			j++;
+// 		}
+// 		if (i >= 40 && j >= 40){
+// 			i = 0;
+// 			flag = 1;
+// 		}
+// 		/*		TIFR0 |= (1<<OCF0A);*/
+// 	}
 
 void adc_init(void){
 	ADMUX |= (1<<REFS0); //AVCC set as reference, ADC0 selected and results are right adjusted
@@ -97,37 +116,70 @@ uint16_t Iadc_to_Isquaredadc(volatile float acvalues[40]){
 	return (uint16_t) rms;
 }
 
+float adc_to_V(uint16_t voltage_adc){
+	// This function converts adc voltage value to  voltage
+	float voltage = 0;
+	voltage = (float) voltage_adc;
+	voltage = voltage * 5;
+	voltage = voltage / 1024;
+	voltage = voltage - 2.053;
+	voltage = voltage * 21.74;
+	
+	return voltage;
+}
+
+float adc_to_A(uint16_t current_adc){
+	// This function converts adc current value to current
+	float current = 0;
+	current = (float) current_adc;
+	current = current * 5;
+	current = current / 1024;
+	current = current - 2.053;
+	current = current / 1.1;
+	
+	return current;
+}
+
+
 
 float linear_approximation(volatile float vac[SAMPLESIZE], volatile float iac[SAMPLESIZE]){
-	float voltage_bar[SAMPLESIZE] = {0};
-	float current_bar[SAMPLESIZE] = {0};
-	float powers[SAMPLESIZE] = {0};
-	float power = 0;
-	// Applying linear approximation for
-	for (uint8_t i = 0; i < SAMPLESIZE; i++){
-		if (i == SAMPLESIZE-1){
-			voltage_bar[i] = (vac[i] + vac[0])/2;
-			}else{
-			voltage_bar[i] = (vac[i] + vac[i+1])/2;
-		}
-		if (i == 0){
-			current_bar[i] = (iac[SAMPLESIZE-1] + iac[i])/2;
-			}else{
-			current_bar[i] = (iac[i-1] + iac[i])/2;
-		}
-	}
+	// Declare the values needed for calculation
+    float power = 0;
+	float voltage_bar = 0;
+	float current_bar = 0;
+	float instantaneous_power = 0;
 
-	// Calculating all instantaneous power
-	for (uint8_t i = 0; i < SAMPLESIZE; i++){
-		powers[i] = ((vac[i] * current_bar[i])) + ((voltage_bar[i] * iac[i]));
-	}
 
-	// Summing all instantaneous for average power later
-	for (uint8_t i = 0; i < SAMPLESIZE; i++){
-		power = power + powers[i];
-	}
-	return power/80*1000;
+	// Implement linear approximation and sum all instantaneous power
+    for (uint8_t i = 0; i < SAMPLESIZE; i++) {
+		voltage_bar = 0;
+		current_bar = 0;
+		instantaneous_power = 0;
+
+	    // Calculate voltage_bar and current_bar
+	    if (i == 0) {
+		    voltage_bar = (vac[i] + vac[i+1]) / 2;
+		    current_bar = (iac[SAMPLESIZE-1] + iac[i]) / 2;
+		}else if (i == SAMPLESIZE - 1) {
+		    voltage_bar = (vac[i] + vac[0]) / 2;
+		    current_bar = (iac[i-1] + iac[i]) / 2;
+		}else{
+		    voltage_bar = (vac[i] + vac[i+1]) / 2;
+		    current_bar = (iac[i-1] + iac[i]) / 2;
+	    }
+
+	    // Calculate instantaneous power for the current sample
+	    instantaneous_power = (vac[i] * current_bar) + (voltage_bar * iac[i]);
+
+	    // Accumulate the instantaneous power
+	    power = power + instantaneous_power;
+    }
+
+	// Scale and convert to Average power (Real)
+    return power/80;
 }
+
+
 
 // 	// Declare the values needed for calculation
 //     float power = 0;
