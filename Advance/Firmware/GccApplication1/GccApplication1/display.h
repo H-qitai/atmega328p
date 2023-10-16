@@ -9,7 +9,7 @@
 #ifndef DISPLAY_H_
 #define DISPLAY_H_
 
-// linkers
+//linkers
 
 void display_init();
 

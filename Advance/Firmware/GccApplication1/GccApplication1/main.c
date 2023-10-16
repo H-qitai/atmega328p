@@ -40,30 +40,33 @@ int main(void)
 {
 	// magic
 	stdout = &usart_stdout;
+	
+	// Declare the variable and arrays needed for calculation later
+	volatile float voltage_ac[SAMPLESIZE] = {0};
+	volatile float current_ac[SAMPLESIZE] = {0};
+	volatile uint16_t voltage_rms = 0;
+	volatile uint16_t current_pk = 0;
+	volatile uint16_t power = 0;
+	uint8_t count = 0;
 		
 	// initializing baud rate for 2MHz
 	// initialize timer0
 	// initialize display
-	// enable global interrupt
 	usart_init(12);
 	timer0_init();
 	int0_init();
 	display_init();
 	adc_init();
+	// enable global interrupt
 	sei();
-	
-	// Declare the variable and arrays needed for calculation later
-	float voltage_ac[SAMPLESIZE] = {0};
-	float current_ac[SAMPLESIZE] = {0};
-	uint16_t voltage_rms = 0;
-	uint16_t current_pk = 0;
-	uint16_t power = 0;
 
-    while (1) 
+    while (1)
     {		
 		// Converting ADC value to Voltage/100 and mA
 		// Offset is stripped and formulas applied.
-		for (uint8_t i = 0; i < SAMPLESIZE; i++){;
+
+		
+		for (uint8_t i = 0; i < SAMPLESIZE; i++){
 			voltage_ac[i] = (((((float)voltage_adc[i])*5.0/1024)-2.053) * 21.74);
 			current_ac[i] = (((((float)current_adc[i])*5.0/1024)-2.053) * 2);
 		}
@@ -79,12 +82,23 @@ int main(void)
 		// Just transmitting.
 		printf("RMS Voltage is: %d%d.%dV\r\n", (voltage_rms/100%10), (voltage_rms/10%10), (voltage_rms%10));
  		printf("Peak Current is:  %d.%d%dA\r\n", (current_pk/100%10), (current_pk/10%10), (current_pk%10));
- 		printf("Power is: %d%d.%dW\r\n",(power /100 %10), (power /10 %10), (power %10));
-		printf("\r\n");
+/* 		printf("Power is: %d%d.%dW\r\n",(power /100 %10), (power /10 %10), (power %10));*/
+// 		printf("\r\n");
+// 
+		for (uint8_t i = 0; i < SAMPLESIZE; i++){
+			/*printf("%d,%d\r\n", (uint16_t)voltage_ac[i]*100, (uint16_t)current_ac[i]*1000);*/
+			printf("%d,%d\r\n", voltage_adc[i], current_adc[i]);
+		}
+		printf("power:%d\r\n", power);
+		
+		if (count == 3){
+  			_delay_ms(10000);
+		}
 
 		dispvoltage = voltage_rms;
 		dispcurrent = current_pk;
 		disppower = power;
+		flag = 0;
 	}
 }
 
